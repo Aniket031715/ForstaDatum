@@ -1,0 +1,10 @@
+streamlit
+pandas
+numpy
+plotly
+pymongo
+python-dotenv
+groq
+openpyxl
+tabulate
+streamlit-floating-container
