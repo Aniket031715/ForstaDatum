@@ -79,6 +79,15 @@ if "delete_status" not in st.session_state:
 if "graphs" not in st.session_state:
     st.session_state.graphs = []
 
+if "active_dataset_key" not in st.session_state:
+    st.session_state.active_dataset_key = None
+
+if "ai_report" not in st.session_state:
+    st.session_state.ai_report = None
+
+if "generate_report" not in st.session_state:
+    st.session_state.generate_report = False
+
 # ==========================
 # Navigation
 # ==========================
@@ -166,9 +175,12 @@ if datasets:
         for dataset in datasets:
 
             if dataset["filename"] == selected:
+
                 selected_dataset = dataset
 
-                if True:
+                dataset_key = f"saved:{selected_dataset['_id']}"
+
+                if st.session_state.active_dataset_key != dataset_key:
 
                     dataframe = load_saved_dataset(
                         str(selected_dataset["_id"])
@@ -177,12 +189,14 @@ if datasets:
                     st.session_state.dataframe = dataframe
                     st.session_state.filename = selected_dataset["filename"]
 
+                    # Mark this dataset as active
+                    st.session_state.active_dataset_key = dataset_key
+
+                    # Reset AI report for the new dataset
+                    st.session_state.ai_report = None
+                    st.session_state.generate_report = True
+
                 break
-
-    else:
-
-        st.session_state.dataframe = None
-        st.session_state.filename = None
 
     if selected_dataset is not None:
 
@@ -313,12 +327,24 @@ if page == "🏠 Home":
         "Upload Dataset",
         type=["csv", "xlsx"]
     )
+
     if uploaded_file is not None:
 
-        dataframe = load_dataset(uploaded_file)
+        dataset_key = f"upload:{uploaded_file.name}:{uploaded_file.size}"
 
-        st.session_state.dataframe = dataframe
-        st.session_state.filename = uploaded_file.name
+        if st.session_state.active_dataset_key != dataset_key:
+
+            dataframe = load_dataset(uploaded_file)
+
+            st.session_state.dataframe = dataframe
+            st.session_state.filename = uploaded_file.name
+
+            # Mark uploaded dataset as active
+            st.session_state.active_dataset_key = dataset_key
+
+            # Reset AI report for the new dataset
+            st.session_state.ai_report = None
+            st.session_state.generate_report = True
 
     if st.session_state.dataframe is not None:
 
@@ -338,9 +364,6 @@ if page == "🏠 Home":
 
         if "conversation" not in st.session_state:
             st.session_state.conversation = None
-
-        if "ai_report" not in st.session_state:
-            st.session_state.ai_report = None
 
         # ==========================
         # Dataset Header
@@ -433,11 +456,6 @@ if page == "🏠 Home":
         # ==========================
         # AI Summary
         # ==========================
-
-        if "generate_report" not in st.session_state:
-
-            st.session_state.generate_report = True
-
 
         if (
             st.session_state.ai_report is None
