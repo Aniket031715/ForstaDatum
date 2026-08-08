@@ -379,21 +379,28 @@ if page == "🏠 Home":
 
     if uploaded_file is not None:
 
-        dataset_key = f"upload:{uploaded_file.name}:{uploaded_file.size}"
+    # Only process the uploaded file if no saved dataset
+    # is currently active.
+        if (
+            st.session_state.active_dataset_key is None
+            or not str(st.session_state.active_dataset_key).startswith("saved:")
+        ):
 
-        if st.session_state.active_dataset_key != dataset_key:
+            dataset_key = f"upload:{uploaded_file.name}:{uploaded_file.size}"
 
-            dataframe = load_dataset(uploaded_file)
+            if st.session_state.active_dataset_key != dataset_key:
 
-            st.session_state.dataframe = dataframe
-            st.session_state.filename = uploaded_file.name
+                dataframe = load_dataset(uploaded_file)
 
-            # Mark uploaded dataset as active
-            st.session_state.active_dataset_key = dataset_key
+                st.session_state.dataframe = dataframe
+                st.session_state.filename = uploaded_file.name
 
-            # Reset AI report for the new dataset
-            st.session_state.ai_report = None
-            st.session_state.generate_report = True
+                # Mark uploaded dataset as active
+                st.session_state.active_dataset_key = dataset_key
+
+                # Reset AI report for the new dataset
+                st.session_state.ai_report = None
+                st.session_state.generate_report = True
 
     if st.session_state.dataframe is not None:
 
