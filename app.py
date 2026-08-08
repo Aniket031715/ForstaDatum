@@ -163,14 +163,41 @@ if datasets:
     )
 
     selected = (
-        "None"
-        if selection in (None, "🏠 Home")
-        else selection.replace("📄 ", "")
+    "None"
+    if selection in (None, "🏠 Home")
+    else selection.replace("📄 ", "")
     )
 
-    st.session_state.selected_dataset_name = selected
+    # ==========================
+    # HOME / NO SAVED DATASET
+    # ==========================
 
-    if selected != "None":
+    if selected == "None":
+
+        st.session_state.selected_dataset_name = "None"
+
+        # Clear currently loaded saved dataset
+        if (
+            st.session_state.active_dataset_key is not None
+            and str(st.session_state.active_dataset_key).startswith("saved:")
+        ):
+            st.session_state.dataframe = None
+            st.session_state.filename = None
+            st.session_state.active_dataset_key = None
+
+            st.session_state.ai_report = None
+            st.session_state.ai_context = None
+            st.session_state.generate_report = False
+
+            st.session_state.graphs = []
+
+    # ==========================
+    # SAVED DATASET SELECTED
+    # ==========================
+
+    else:
+
+        st.session_state.selected_dataset_name = selected
 
         for dataset in datasets:
 
@@ -189,10 +216,9 @@ if datasets:
                     st.session_state.dataframe = dataframe
                     st.session_state.filename = selected_dataset["filename"]
 
-                    # Mark this dataset as active
                     st.session_state.active_dataset_key = dataset_key
 
-                    # Reset AI report for the new dataset
+                    # Reset AI report for new dataset
                     st.session_state.ai_report = None
                     st.session_state.generate_report = True
 
@@ -305,6 +331,27 @@ def render_graph(graph, index):
                 st.session_state.graphs.pop(index)
                 st.rerun()
 
+def handle_upload():
+    # Remove saved dataset selection
+    st.session_state.dataset_pill = "🏠 Home"
+
+    # Clear old dataset state
+    st.session_state.selected_dataset_name = "None"
+    st.session_state.active_dataset_key = None
+
+    # Reset AI state
+    st.session_state.ai_report = None
+    st.session_state.ai_context = None
+    st.session_state.generate_report = False
+
+    # Reset graphs
+    st.session_state.graphs = []
+
+
+# ==========================
+# Main Page
+# ==========================
+
 # ==========================
 # Main Page
 # ==========================
@@ -325,7 +372,9 @@ if page == "🏠 Home":
 
     uploaded_file = st.file_uploader(
         "Upload Dataset",
-        type=["csv", "xlsx"]
+        type=["csv", "xlsx"],
+        key="uploaded_file",
+        on_change=handle_upload
     )
 
     if uploaded_file is not None:
